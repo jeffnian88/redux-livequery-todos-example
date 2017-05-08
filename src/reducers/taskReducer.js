@@ -6,6 +6,10 @@ export default function taskReducer(state = { taskList: [], completeTaskSet: {} 
 			let { content } = action.payload;
 			return update(state, { taskList: { $push: [{ content, created: Date.now() }] } });
 		}
+		case "UPDATE_TASK": {
+			let { id, content } = action.payload;
+			return update(state, { taskList: { [id]: { $merge: { content, updated: Date.now() } } } });
+		}
 		case "MARK_COMPLETE_TASK": {
 			let { id } = action.meta;
 			return update(state, { completeTaskSet: { [id]: { $set: { completed: Date.now() } } } });

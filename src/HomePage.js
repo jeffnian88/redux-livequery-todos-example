@@ -42,7 +42,11 @@ class HomePage extends Component {
 			return (
 				<div key={key}>
 					<h4>
-						{task.content} - Created:{moment(task.created).toString()}
+						{task.content}
+						<br />
+
+						<input type="text" value={task.content} onChange={(e) => this.props.onUpdateTask({ id: key, content: e.target.value })} /> -
+						Created:{moment(task.created).format()}
 						<button type="button" onClick={() => this.props.onMarkCompleteTask(key)} disabled={key in completeTaskSet}>
 							COMPLETE
 							</button>
@@ -77,7 +81,7 @@ class HomePage extends Component {
 					Please enter a task
         </p>
 				<input type="text" onChange={this.handleChange.bind(this)} />
-				<button type="button" onClick={this.handlePress.bind(this)}>Fetch</button>
+				<button type="button" onClick={this.handlePress.bind(this)}>ADD</button>
 				<br />
 				All Task List
 				{taskListOut}
@@ -93,6 +97,9 @@ function mapDispatchToProps(dispatch, props) {
 	return {
 		onAddNewTask: (content) => {
 			dispatch({ type: "ADD_NEW_TASK", payload: { content } });
+		},
+		onUpdateTask: ({ id, content }) => {
+			dispatch({ type: "UPDATE_TASK", payload: { id, content } });
 		},
 		onMarkCompleteTask: (id) => {
 			dispatch({ type: "MARK_COMPLETE_TASK", meta: { id } });
