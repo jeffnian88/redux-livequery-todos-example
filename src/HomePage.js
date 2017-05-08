@@ -1,10 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
 import logo from './logo.svg';
 import './App.css';
 import moment from 'moment';
-import { getComposedState, getCompleteTaskList } from './livequery/query';
+import { getComposedState, getCompleteTaskList, getFilteredTask } from './livequery/query';
 class HomePage extends Component {
 	constructor(props, context) {
 		super(props, context);
@@ -22,11 +21,28 @@ class HomePage extends Component {
 			});
 		}
 	}
+	handleFilteredKeyWordChange(e) {
+		let keyword = e.target.value;
+		if (this.unsubscribeForFilter) {
+			this.unsubscribeForFilter();
+			delete this.unsubscribeForFilter;
+		}
+		if (!keyword || keyword.length === 0) {
+			let keyword = e.target.value;
+			// if keyword is null or undefined, then clear it up
+			this.setState({ filteredTaskList: [] });
+			return;
+		}
+		this.unsubscribeForFilter = getFilteredTask(keyword, (filteredTaskList) => {
+			console.log("getFilteredTask callback was invoked!");
+			this.setState({ filteredTaskList });
+		});
+	}
 
-	handleChange(e) {
+	handleTaskTitleChange(e) {
 		this.content = e.target.value;
 	}
-	handlePress() {
+	handleADDPress() {
 		let content = this.content;
 		if (content) {
 			this.props.onAddNewTask(content);
@@ -43,10 +59,9 @@ class HomePage extends Component {
 				<div key={key}>
 					<h4>
 						{task.content}
-						<br />
-
-						<input type="text" value={task.content} onChange={(e) => this.props.onUpdateTask({ id: key, content: e.target.value })} /> -
-						Created:{moment(task.created).format()}
+						<input type="text" value={task.content} onChange={(e) => this.props.onUpdateTask({ id: key, content: e.target.value })} />
+						-
+						Created: {moment(task.created).format()}
 						<button type="button" onClick={() => this.props.onMarkCompleteTask(key)} disabled={key in completeTaskSet}>
 							COMPLETE
 							</button>
@@ -62,13 +77,25 @@ class HomePage extends Component {
 				<div key={key}>
 					<h4>
 						{task.content} -
-						Spent Time:{moment.duration((completeTaskSet.completed - task.created) / 1000, 'secands').humanize()}
+						Spent Time: {moment.duration((completeTaskSet.completed - task.created) / 1000, 'secands').humanize()}
 						<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)}>
 							UNCOMPLETE
 							</button>
 					</h4>
 				</div >
 			);
+		});
+
+		let filteredTaskListOut = Object.keys(this.state.filteredTaskList || []).map((key) => {
+			let task = this.state.filteredTaskList[key];
+			return (
+				<div key={key}>
+					<h4>
+						{task.content}
+					</h4>
+				</div >
+			);
+
 		});
 
 		return (
@@ -79,15 +106,34 @@ class HomePage extends Component {
 				</div>
 				<p className="App-intro">
 					Please enter a task
+					<br />
+					<input type="text" onChange={this.handleTaskTitleChange.bind(this)} />
+					<button type="button" onClick={this.handleADDPress.bind(this)}>ADD</button>
+				</p>
+
+				<p className="App-intro">
+					All Task List
         </p>
-				<input type="text" onChange={this.handleChange.bind(this)} />
-				<button type="button" onClick={this.handlePress.bind(this)}>ADD</button>
-				<br />
-				All Task List
 				{taskListOut}
 				<br />
-				Your Complete Task List
+
+				<p className="App-intro">
+					Your Complete Task List
+				</p>
 				{completeTaskListOut}
+				<br />
+
+				<p className="App-intro">
+					Please enter Filtered keyword
+					<br />
+					<input type="text" onChange={this.handleFilteredKeyWordChange.bind(this)} />
+				</p>
+				<p className="App-intro">
+					All Filtered Task List
+        </p>
+				{filteredTaskListOut}
+				<br />
+
 			</div>
 		);
 	}

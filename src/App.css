@@ -1,5 +1,5 @@
 .App {
-  text-align: center;
+  text-align: left;
 }
 
 .App-logo {
@@ -15,6 +15,7 @@
 }
 
 .App-intro {
+  text-align: center;
   font-size: large;
 }
 
