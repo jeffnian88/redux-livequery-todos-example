@@ -33,7 +33,7 @@ class HomePage extends Component {
 		}
 	}
 	render() {
-		console.log("[HomePage] render():", this);
+		//console.log("[HomePage] render():", this);
 
 		let { task } = this.state.composedState || {};
 		let { taskList, completeTaskSet } = task || {};
