@@ -23,16 +23,23 @@ class HomePage extends Component {
 	}
 	handleFilteredKeyWordChange(e) {
 		let keyword = e.target.value;
+		// sanity-check parameter
+		if (!keyword || keyword.length === 0) {
+			let keyword = e.target.value;
+			// if keyword is null or undefined, then clear it up
+			if (this.state.filteredTaskList.length !== 0) {
+				this.setState({ filteredTaskList: [] });
+			}
+			return;
+		}
+
+		// unsubscribe previous live query
 		if (this.unsubscribeForFilter) {
 			this.unsubscribeForFilter();
 			delete this.unsubscribeForFilter;
 		}
-		if (!keyword || keyword.length === 0) {
-			let keyword = e.target.value;
-			// if keyword is null or undefined, then clear it up
-			this.setState({ filteredTaskList: [] });
-			return;
-		}
+
+		// subscribe a new live query
 		this.unsubscribeForFilter = getFilteredTask(keyword, (filteredTaskList) => {
 			console.log("getFilteredTask callback was invoked!");
 			this.setState({ filteredTaskList });
@@ -44,7 +51,7 @@ class HomePage extends Component {
 	}
 	handleADDPress() {
 		let content = this.content;
-		if (content) {
+		if (content && content.length !== 0) {
 			this.props.onAddNewTask(content);
 		}
 	}
@@ -95,7 +102,6 @@ class HomePage extends Component {
 					</h4>
 				</div >
 			);
-
 		});
 
 		return (
@@ -104,6 +110,7 @@ class HomePage extends Component {
 					<img src={logo} className="App-logo" alt="logo" />
 					<h2>Welcome to React</h2>
 				</div>
+
 				<p className="App-intro">
 					Please enter a task
 					<br />
@@ -124,7 +131,7 @@ class HomePage extends Component {
 				<br />
 
 				<p className="App-intro">
-					Please enter Filtered keyword
+					Please enter filter keyword
 					<br />
 					<input type="text" onChange={this.handleFilteredKeyWordChange.bind(this)} />
 				</p>
@@ -138,7 +145,6 @@ class HomePage extends Component {
 		);
 	}
 }
-// Only bind action to component
 function mapDispatchToProps(dispatch, props) {
 	return {
 		onAddNewTask: (content) => {
@@ -155,5 +161,5 @@ function mapDispatchToProps(dispatch, props) {
 		}
 	};
 }
-
+// Only bind action to react component
 export default connect(null, mapDispatchToProps)(HomePage);
