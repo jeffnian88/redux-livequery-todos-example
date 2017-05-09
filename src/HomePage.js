@@ -128,6 +128,9 @@ class HomePage extends Component {
 						<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)}>
 							UNCOMPLETE
 							</button>
+						<button type="button" onClick={() => this.props.onUnMarkActiveTask(key)}>
+							INACTIVE
+							</button>
 					</h4>
 				</div >
 			);
