@@ -107,7 +107,7 @@ class HomePage extends Component {
 						{task.content} (key:{key})
 						<input type="text" value={task.content} onChange={(e) => this.props.onUpdateTask({ id: key, content: e.target.value })} />
 						-
-						Created: {moment(task.created).format()}
+						Created: {moment(task.created).format('H:mm:ss')}
 						<button type="button" onClick={() => this.props.onMarkCompleteTask(key)} disabled={key in isComplete}>
 							COMPLETE
 							</button>
@@ -149,8 +149,7 @@ class HomePage extends Component {
 					<h4>
 
 						{task.content} (key:{key}) -
-						Spent Time: {moment.duration((isComplete.completed - task.created) / 1000, 'secands').humanize()}
-						Active Time: {moment(isActive.active).format()}
+						Active Time: {moment(isActive.active).format('H:mm:ss')}
 						<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)}>
 							UNCOMPLETE
 							</button>
