@@ -25,7 +25,6 @@ class HomePage extends Component {
 		let keyword = e.target.value;
 		// sanity-check parameter
 		if (!keyword || keyword.length === 0) {
-			let keyword = e.target.value;
 			// if keyword is null or undefined, then clear it up
 			if (this.state.filteredTaskList.length !== 0) {
 				this.setState({ filteredTaskList: [] });
