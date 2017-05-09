@@ -30,4 +30,4 @@ const enhancer = compose(
   window.devToolsExtension ? window.devToolsExtension() : f => f // add support for Redux dev tools,
 
 );
-export const store = createStore(rootReducer, { task: { taskList: [], completeTaskSet: {} } }, enhancer);
+export const store = createStore(rootReducer, { task: { taskList: [], isComplete: {}, isActive: {} } }, enhancer);

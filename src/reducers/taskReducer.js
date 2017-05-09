@@ -1,6 +1,6 @@
 import update from 'immutability-helper';
 
-export default function taskReducer(state = { taskList: [], completeTaskSet: {} }, action = {}) {
+export default function taskReducer(state = { taskList: [], isComplete: {}, isActive: {} }, action = {}) {
 	switch (action.type) {
 		case "ADD_NEW_TASK": {
 			let { content } = action.payload;
@@ -12,11 +12,19 @@ export default function taskReducer(state = { taskList: [], completeTaskSet: {} 
 		}
 		case "MARK_COMPLETE_TASK": {
 			let { id } = action.meta;
-			return update(state, { completeTaskSet: { [id]: { $set: { completed: Date.now() } } } });
+			return update(state, { isComplete: { [id]: { $set: { completed: Date.now() } } } });
 		}
 		case "UNMARK_COMPLETE_TASK": {
 			let { id } = action.meta;
-			return update(state, { completeTaskSet: { $apply: function (x) { let y = Object.assign({}, x); delete y[id]; return y; } } });
+			return update(state, { isComplete: { $apply: function (x) { let y = Object.assign({}, x); delete y[id]; return y; } } });
+		}
+		case "MARK_ACTIVE_TASK": {
+			let { id } = action.meta;
+			return update(state, { isActive: { [id]: { $set: { active: Date.now() } } } });
+		}
+		case "UNMARK_ACTIVE_TASK": {
+			let { id } = action.meta;
+			return update(state, { isActive: { $apply: function (x) { let y = Object.assign({}, x); delete y[id]; return y; } } });
 		}
 		default:
 			return state;
