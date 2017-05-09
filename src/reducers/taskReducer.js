@@ -26,6 +26,10 @@ export default function taskReducer(state = { taskList: [], isComplete: {}, isAc
 			let { id } = action.meta;
 			return update(state, { isActive: { $apply: function (x) { let y = Object.assign({}, x); delete y[id]; return y; } } });
 		}
+		case "MERGE_ACTIVE_COMPLETE_SET": {
+			let { isActiveOrComplete } = action.payload;
+			return update(state, { isActiveOrComplete: { $set: isActiveOrComplete } });
+		}
 		default:
 			return state;
 	}

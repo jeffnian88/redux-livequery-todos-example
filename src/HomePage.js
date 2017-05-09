@@ -3,8 +3,9 @@ import { connect } from 'react-redux';
 import logo from './logo.svg';
 import './App.css';
 import moment from 'moment';
-import { rxQueryBasedOnObjectKeys, rxQueryInnerJoin, rxQuerySimple } from 'redux-livequery';
-import { getCompleteTaskList, getFilteredTask } from './livequery/query';
+//import { rxQueryBasedOnObjectKeys, rxQueryInnerJoin, rxQueryOuterJoin, rxQuerySimple } from '../../redux-livequery';
+import { rxQueryBasedOnObjectKeys, rxQueryInnerJoin, rxQueryOuterJoin, rxQuerySimple } from 'redux-livequery';
+import { getFilteredTask } from './livequery/query';
 class HomePage extends Component {
 	constructor(props, context) {
 		super(props, context);
@@ -36,6 +37,29 @@ class HomePage extends Component {
 				this.setState({ completeActiveTaskList });
 			}, 0);
 		}
+		if (!this.unsub4) {
+			let selector0 = (state) => state.task.isComplete;
+			let selector1 = (state) => state.task.isActive;
+			this.unsub4 = rxQueryOuterJoin([selector0, selector1], ['isComplete', 'isActive'], (completeOrActive) => {
+				console.log("got latest completeOrActive", completeOrActive);
+				let isActiveOrComplete = {};
+				completeOrActive.forEach((each) => {
+					let { key, isComplete, isActive } = each;
+					isActiveOrComplete[key] = Object.assign({}, isComplete, isActive);
+				});
+				// set data into redux state, not local state
+				this.props.onMergeActiveCompleteSet(isActiveOrComplete);
+			}, 0);
+		}
+		if (!this.unsub5) {
+			let selector0 = (state) => state.task.isActiveOrComplete;
+			let selector1 = (state) => state.task.taskList;
+			this.unsub5 = rxQueryInnerJoin([selector0, selector1], ['isActiveOrComplete', 'task'], (activeOrCompleteTaskList) => {
+				console.log("got latest activeOrCompleteTaskList", activeOrCompleteTaskList);
+				this.setState({ activeOrCompleteTaskList });
+			}, 0);
+		}
+
 	}
 	handleFilteredKeyWordChange(e) {
 		let keyword = e.target.value;
@@ -80,18 +104,18 @@ class HomePage extends Component {
 			return (
 				<div key={key}>
 					<h4>
-						{task.content}
+						{task.content} (key:{key})
 						<input type="text" value={task.content} onChange={(e) => this.props.onUpdateTask({ id: key, content: e.target.value })} />
 						-
 						Created: {moment(task.created).format()}
 						<button type="button" onClick={() => this.props.onMarkCompleteTask(key)} disabled={key in isComplete}>
 							COMPLETE
 							</button>
-						<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)} disabled={!(key in isComplete)}>
-							UNCOMPLETE
-							</button>
 						<button type="button" onClick={() => this.props.onMarkActiveTask(key)} disabled={key in isActive}>
 							ACTIVE
+							</button>
+						<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)} disabled={!(key in isComplete)}>
+							UNCOMPLETE
 							</button>
 						<button type="button" onClick={() => this.props.onUnMarkActiveTask(key)} disabled={!(key in isActive)}>
 							INACTIVE
@@ -107,7 +131,7 @@ class HomePage extends Component {
 			return (
 				<div key={key}>
 					<h4>
-						{task.content} -
+						{task.content} (key:{key}) -
 						Spent Time: {moment.duration((isComplete.completed - task.created) / 1000, 'secands').humanize()}
 						<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)}>
 							UNCOMPLETE
@@ -123,8 +147,10 @@ class HomePage extends Component {
 			return (
 				<div key={key}>
 					<h4>
-						{task.content} -
+
+						{task.content} (key:{key}) -
 						Spent Time: {moment.duration((isComplete.completed - task.created) / 1000, 'secands').humanize()}
+						Active Time: {moment(isActive.active).format()}
 						<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)}>
 							UNCOMPLETE
 							</button>
@@ -136,13 +162,26 @@ class HomePage extends Component {
 			);
 		});
 
+		let { activeOrCompleteTaskList } = this.state;
+		let activeOrCompleteTaskListOut = (activeOrCompleteTaskList || []).map((each) => {
+			let { isActiveOrComplete, task, key } = each;
+			return (
+				<div key={key}>
+					<h4>
+
+						{task.content} (key:{key}) - {isActiveOrComplete.active ? "active" : ""} {isActiveOrComplete.completed ? "completed" : ""}
+					</h4>
+				</div >
+			);
+		});
+
 
 		let filteredTaskListOut = Object.keys(this.state.filteredTaskList || []).map((key) => {
 			let task = this.state.filteredTaskList[key];
 			return (
 				<div key={key}>
 					<h4>
-						{task.content}
+						{task.content} (key:{key})
 					</h4>
 				</div >
 			);
@@ -175,10 +214,17 @@ class HomePage extends Component {
 				<br />
 
 				<p className="App-intro">
-					Your Complete & Active Task List
+					Your Complete and Active Task List
 				</p>
 				{completeActiveTaskListOut}
 				<br />
+
+				<p className="App-intro">
+					Your Complete or Active Task List
+				</p>
+				{activeOrCompleteTaskListOut}
+				<br />
+
 
 				<p className="App-intro">
 					Please enter filter keyword
@@ -214,7 +260,11 @@ function mapDispatchToProps(dispatch, props) {
 		},
 		onUnMarkActiveTask: (id) => {
 			dispatch({ type: "UNMARK_ACTIVE_TASK", meta: { id } });
-		}
+		},
+		onMergeActiveCompleteSet: (isActiveOrComplete) => {
+			dispatch({ type: "MERGE_ACTIVE_COMPLETE_SET", payload: { isActiveOrComplete } });
+		},
+
 	};
 }
 // Only bind action to react component

@@ -1,4 +1,5 @@
-import { rxQueryBasedOnObjectKeys, rxQueryInnerJoin, rxQuerySimple } from 'redux-livequery';
+//import { rxQuerySimple } from '../../../redux-livequery';
+import { rxQuerySimple } from 'redux-livequery';
 export let resultValue = [];
 export function getFilteredTask(keyword, cb) {
   let selector0 = (state) => state.task.taskList;// only subscribe task list

@@ -6,6 +6,7 @@ import promiseMiddleware from 'redux-promise';
 import rootReducer from './reducers';
 
 import { livequeryEnhancer } from 'redux-livequery';
+//import { livequeryEnhancer } from '../../redux-livequery';
 
 let appliedMiddleware;
 
