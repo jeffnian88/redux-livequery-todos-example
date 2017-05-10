@@ -5,7 +5,6 @@ import './App.css';
 import moment from 'moment';
 //import { rxQueryBasedOnObjectKeys, rxQueryInnerJoin, rxQueryOuterJoin, rxQuerySimple } from '../../redux-livequery';
 import { rxQueryBasedOnObjectKeys, rxQueryInnerJoin, rxQueryOuterJoin, rxQuerySimple } from 'redux-livequery';
-import { getFilteredTask } from './livequery/query';
 class HomePage extends Component {
 	constructor(props, context) {
 		super(props, context);
@@ -22,8 +21,7 @@ class HomePage extends Component {
 		if (!this.unsub2) {
 			let selector0 = (state) => state.task.isComplete;
 			let selector1 = (state) => state.task.taskList;
-			//let unsub = rxQueryBasedOnObjectKeys([selector0, selector1], ['isComplete', 'task'], (completeTaskList) => {
-			this.unsub2 = rxQueryInnerJoin([selector0, selector1], ['isComplete', 'task'], (completeTaskList) => {
+			this.unsub2 = rxQueryBasedOnObjectKeys([selector0, selector1], ['isComplete', 'task'], (completeTaskList) => {
 				console.log("got latest completeTaskList");
 				this.setState({ completeTaskList });
 			}, 0);
@@ -59,7 +57,6 @@ class HomePage extends Component {
 				this.setState({ activeOrCompleteTaskList });
 			}, 0);
 		}
-
 	}
 	handleFilteredKeyWordChange(e) {
 		let keyword = e.target.value;
@@ -79,10 +76,16 @@ class HomePage extends Component {
 		}
 
 		// subscribe a new live query
-		this.unsubscribeForFilter = getFilteredTask(keyword, (filteredTaskList) => {
-			console.log("getFilteredTask callback was invoked!");
+		this.unsubscribeForFilter = rxQuerySimple([(state) => state.task.taskList], ['taskList'], (taskList) => {
+			console.log("got latest taskList");
+			// you can do whatever you want here
+			// ex: filter, reduce, map
+			let filteredTaskList = taskList.taskList.filter((each) => {
+				return each.content.indexOf(keyword) > -1;
+			});
 			this.setState({ filteredTaskList });
-		});
+		}, 0);
+		//}, 500);//debounceTime
 	}
 
 	handleTaskTitleChange(e) {
@@ -102,26 +105,23 @@ class HomePage extends Component {
 		let taskListOut = Object.keys(taskList || []).map((key) => {
 			let task = taskList[key];
 			return (
-				<div key={key}>
-					<h4>
-						{task.content} (key:{key})
+				<li key={key}>
+					{task.content} (key:{key})
 						<input type="text" value={task.content} onChange={(e) => this.props.onUpdateTask({ id: key, content: e.target.value })} />
-						-
-						Created: {moment(task.created).format('H:mm:ss')}
-						<button type="button" onClick={() => this.props.onMarkCompleteTask(key)} disabled={key in isComplete}>
-							COMPLETE
+					- Created: {moment(task.created).format('H:mm:ss')}
+					<button type="button" onClick={() => this.props.onMarkCompleteTask(key)} disabled={key in isComplete}>
+						COMPLETE
 							</button>
-						<button type="button" onClick={() => this.props.onMarkActiveTask(key)} disabled={key in isActive}>
-							ACTIVE
+					<button type="button" onClick={() => this.props.onMarkActiveTask(key)} disabled={key in isActive}>
+						ACTIVE
 							</button>
-						<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)} disabled={!(key in isComplete)}>
-							UNCOMPLETE
+					<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)} disabled={!(key in isComplete)}>
+						UNCOMPLETE
 							</button>
-						<button type="button" onClick={() => this.props.onUnMarkActiveTask(key)} disabled={!(key in isActive)}>
-							INACTIVE
+					<button type="button" onClick={() => this.props.onUnMarkActiveTask(key)} disabled={!(key in isActive)}>
+						INACTIVE
 							</button>
-					</h4>
-				</div >
+				</li >
 			);
 		});
 
@@ -129,15 +129,14 @@ class HomePage extends Component {
 		let completeTaskListOut = (completeTaskList || []).map((each) => {
 			let { isComplete, task, key } = each;
 			return (
-				<div key={key}>
-					<h4>
-						{task.content} (key:{key}) -
-						Spent Time: {moment.duration((isComplete.completed - task.created) / 1000, 'secands').humanize()}
-						<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)}>
-							UNCOMPLETE
+				<li key={key}>
+					{task.content} (key:{key}) -
+					Complete Time: {moment(isComplete.completed).format('H:mm:ss')},
+					Spent Time: {moment.duration((isComplete.completed - task.created) / 1000, 'secands').humanize()}
+					<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)}>
+						UNCOMPLETE
 							</button>
-					</h4>
-				</div >
+				</li >
 			);
 		});
 
@@ -145,19 +144,17 @@ class HomePage extends Component {
 		let completeActiveTaskListOut = (completeActiveTaskList || []).map((each) => {
 			let { isComplete, isActive, task, key } = each;
 			return (
-				<div key={key}>
-					<h4>
-
-						{task.content} (key:{key}) -
-						Active Time: {moment(isActive.active).format('H:mm:ss')}
-						<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)}>
-							UNCOMPLETE
+				<li key={key}>
+					{task.content} (key:{key}) -
+					Complete Time: {moment(isComplete.completed).format('H:mm:ss')},
+					Active Time: {moment(isActive.active).format('H:mm:ss')}
+					<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)}>
+						UNCOMPLETE
 							</button>
-						<button type="button" onClick={() => this.props.onUnMarkActiveTask(key)}>
-							INACTIVE
+					<button type="button" onClick={() => this.props.onUnMarkActiveTask(key)}>
+						INACTIVE
 							</button>
-					</h4>
-				</div >
+				</li >
 			);
 		});
 
@@ -165,12 +162,11 @@ class HomePage extends Component {
 		let activeOrCompleteTaskListOut = (activeOrCompleteTaskList || []).map((each) => {
 			let { isActiveOrComplete, task, key } = each;
 			return (
-				<div key={key}>
-					<h4>
-
-						{task.content} (key:{key}) - {isActiveOrComplete.active ? "active" : ""} {isActiveOrComplete.completed ? "completed" : ""}
-					</h4>
-				</div >
+				<li key={key}>
+					{task.content} (key:{key}) -
+					{isActiveOrComplete.completed ? `Complete Time: ${moment(isActiveOrComplete.completed).format('H:mm:ss')}, ` : ""}
+					{isActiveOrComplete.active ? `Active Time: ${moment(isActiveOrComplete.active).format('H:mm:ss')}` : ""}
+				</li >
 			);
 		});
 
@@ -178,11 +174,9 @@ class HomePage extends Component {
 		let filteredTaskListOut = Object.keys(this.state.filteredTaskList || []).map((key) => {
 			let task = this.state.filteredTaskList[key];
 			return (
-				<div key={key}>
-					<h4>
-						{task.content} (key:{key})
-					</h4>
-				</div >
+				<li key={key}>
+					{task.content} (key:{key})
+				</li >
 			);
 		});
 
@@ -203,25 +197,25 @@ class HomePage extends Component {
 				<p className="App-intro">
 					All Task List
         </p>
-				{taskListOut}
+				<ul>{taskListOut}</ul>
 				<br />
 
 				<p className="App-intro">
 					Your Complete Task List
 				</p>
-				{completeTaskListOut}
+				<ul>{completeTaskListOut}</ul>
 				<br />
 
 				<p className="App-intro">
 					Your Complete and Active Task List
 				</p>
-				{completeActiveTaskListOut}
+				<ul>{completeActiveTaskListOut}</ul>
 				<br />
 
 				<p className="App-intro">
 					Your Complete or Active Task List
 				</p>
-				{activeOrCompleteTaskListOut}
+				<ul>{activeOrCompleteTaskListOut}</ul>
 				<br />
 
 
@@ -233,7 +227,7 @@ class HomePage extends Component {
 				<p className="App-intro">
 					All Filtered Task List
         </p>
-				{filteredTaskListOut}
+				<ul>{filteredTaskListOut}</ul>
 				<br />
 
 			</div>
