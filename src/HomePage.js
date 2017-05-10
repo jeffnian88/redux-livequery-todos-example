@@ -30,9 +30,9 @@ class HomePage extends Component {
 			let selector0 = (state) => state.task.isComplete;
 			let selector1 = (state) => state.task.isActive;
 			let selector2 = (state) => state.task.taskList;
-			this.unsub3 = rxQueryInnerJoin([selector0, selector1, selector2], ['isComplete', 'isActive', 'task'], (completeActiveTaskList) => {
-				console.log("got latest completeActiveTaskList");
-				this.setState({ completeActiveTaskList });
+			this.unsub3 = rxQueryInnerJoin([selector0, selector1, selector2], ['isComplete', 'isActive', 'task'], (completeAndActiveTaskList) => {
+				console.log("got latest completeAndActiveTaskList");
+				this.setState({ completeAndActiveTaskList });
 			}, 0);
 		}
 		if (!this.unsub4) {
@@ -52,9 +52,9 @@ class HomePage extends Component {
 		if (!this.unsub5) {
 			let selector0 = (state) => state.task.isActiveOrComplete;
 			let selector1 = (state) => state.task.taskList;
-			this.unsub5 = rxQueryInnerJoin([selector0, selector1], ['isActiveOrComplete', 'task'], (activeOrCompleteTaskList) => {
-				console.log("got latest activeOrCompleteTaskList", activeOrCompleteTaskList);
-				this.setState({ activeOrCompleteTaskList });
+			this.unsub5 = rxQueryInnerJoin([selector0, selector1], ['isActiveOrComplete', 'task'], (completeOrActiveTaskList) => {
+				console.log("got latest completeOrActiveTaskList", completeOrActiveTaskList);
+				this.setState({ completeOrActiveTaskList });
 			}, 0);
 		}
 	}
@@ -106,9 +106,8 @@ class HomePage extends Component {
 			let task = taskList[key];
 			return (
 				<li key={key}>
-					(key:{key}) {task.content}
-						<input type="text" value={task.content} onChange={(e) => this.props.onUpdateTask({ id: key, content: e.target.value })} />
-					- Created: {moment(task.created).format('H:mm:ss')}
+					(key:{key}) {task.content} -
+					Created: {moment(task.created).format('H:mm:ss')}
 					<button type="button" onClick={() => this.props.onMarkCompleteTask(key)} disabled={key in isComplete}>
 						COMPLETE
 							</button>
@@ -121,55 +120,10 @@ class HomePage extends Component {
 					<button type="button" onClick={() => this.props.onUnMarkActiveTask(key)} disabled={!(key in isActive)}>
 						INACTIVE
 							</button>
+					Edit:<input type="text" value={task.content} onChange={(e) => this.props.onUpdateTask({ id: key, content: e.target.value })} />
 				</li >
 			);
 		});
-
-		let { completeTaskList } = this.state;
-		let completeTaskListOut = (completeTaskList || []).map((each) => {
-			let { isComplete, task, key } = each;
-			return (
-				<li key={key}>
-					(key:{key}) {task.content} - 
-					Complete Time: {moment(isComplete.completed).format('H:mm:ss')},
-					Spent Time: {moment.duration((isComplete.completed - task.created) / 1000, 'secands').humanize()}
-					<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)}>
-						UNCOMPLETE
-							</button>
-				</li >
-			);
-		});
-
-		let { completeActiveTaskList } = this.state;
-		let completeActiveTaskListOut = (completeActiveTaskList || []).map((each) => {
-			let { isComplete, isActive, task, key } = each;
-			return (
-				<li key={key}>
-					(key:{key}) {task.content} - 
-					Complete Time: {moment(isComplete.completed).format('H:mm:ss')},
-					Active Time: {moment(isActive.active).format('H:mm:ss')}
-					<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)}>
-						UNCOMPLETE
-							</button>
-					<button type="button" onClick={() => this.props.onUnMarkActiveTask(key)}>
-						INACTIVE
-							</button>
-				</li >
-			);
-		});
-
-		let { activeOrCompleteTaskList } = this.state;
-		let activeOrCompleteTaskListOut = (activeOrCompleteTaskList || []).map((each) => {
-			let { isActiveOrComplete, task, key } = each;
-			return (
-				<li key={key}>
-					(key:{key}) {task.content} - 
-					{isActiveOrComplete.completed ? ` Complete Time: ${moment(isActiveOrComplete.completed).format('H:mm:ss')},` : ""}
-					{isActiveOrComplete.active ? ` Active Time: ${moment(isActiveOrComplete.active).format('H:mm:ss')}` : ""}
-				</li >
-			);
-		});
-
 
 		let filteredTaskListOut = Object.keys(this.state.filteredTaskList || []).map((key) => {
 			let task = this.state.filteredTaskList[key];
@@ -198,25 +152,31 @@ class HomePage extends Component {
 					All Task List
         </p>
 				<ul>{taskListOut}</ul>
-				<br />
+				<hr />
 
 				<p className="App-intro">
 					Your Complete Task List
 				</p>
-				<ul>{completeTaskListOut}</ul>
-				<br />
+				<TaskList taskList={this.state.completeTaskList}
+					onUnMarkCompleteTask={this.props.onUnMarkCompleteTask}
+					onUnMarkActiveTask={this.props.onUnMarkActiveTask} />
+				<hr />
 
 				<p className="App-intro">
 					Your Complete and Active Task List
 				</p>
-				<ul>{completeActiveTaskListOut}</ul>
-				<br />
+				<TaskList taskList={this.state.completeAndActiveTaskList}
+					onUnMarkCompleteTask={this.props.onUnMarkCompleteTask}
+					onUnMarkActiveTask={this.props.onUnMarkActiveTask} />
+				<hr />
 
 				<p className="App-intro">
 					Your Complete or Active Task List
 				</p>
-				<ul>{activeOrCompleteTaskListOut}</ul>
-				<br />
+				<TaskList taskList={this.state.completeOrActiveTaskList}
+					onUnMarkCompleteTask={this.props.onUnMarkCompleteTask}
+					onUnMarkActiveTask={this.props.onUnMarkActiveTask} />
+				<hr />
 
 
 				<p className="App-intro">
@@ -262,3 +222,35 @@ function mapDispatchToProps(dispatch, props) {
 }
 // Only bind action to react component
 export default connect(null, mapDispatchToProps)(HomePage);
+
+const TaskList = ({ taskList = [], onUnMarkCompleteTask, onUnMarkActiveTask }) => {
+	let taskListOut = taskList.map((each) => {
+		let { isComplete, isActive, task, key } = each;
+		let { isActiveOrComplete } = each;
+		let { completed } = isComplete || isActiveOrComplete || {};
+		let { active } = isActive || isActiveOrComplete || {};
+
+		let completedBtn = "", activeBtn = "";
+		if (completed) {
+			completedBtn = <button type="button" onClick={() => onUnMarkCompleteTask(key)}>UNCOMPLETE</button>;
+		}
+		if (active) {
+			activeBtn = <button type="button" onClick={() => onUnMarkActiveTask(key)}>INACTIVE</button>;
+		}
+		return (
+			<li key={key}>
+				(key:{key}) {task.content} -
+				{completed ? ` Complete Time: ${moment(completed).format('H:mm:ss')}` : ""}
+				{active ? ` Active Time: ${moment(active).format('H:mm:ss')}` : ""}
+				{completedBtn}{activeBtn}
+			</li >
+
+		);
+	});
+
+	return (
+		<ul>
+			{taskListOut}
+		</ul>
+	);
+}
