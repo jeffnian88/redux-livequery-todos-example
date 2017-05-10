@@ -12,9 +12,11 @@ class HomePage extends Component {
 		if (!this.unsub1) {
 			let selector = (state) => state.task;
 			this.unsub1 = rxQuerySimple([selector], ['task'], (composedState) => {
+				// equal SQL => select * from task
+				console.log("got latest composedState", composedState);
 				// you can do whatever you want here
 				// ex: filter, reduce, map
-				console.log("got latest composedState");
+
 				this.setState({ composedState });
 			}, 0);
 		}
@@ -22,7 +24,12 @@ class HomePage extends Component {
 			let selector0 = (state) => state.task.isComplete;
 			let selector1 = (state) => state.task.taskList;
 			this.unsub2 = rxQueryBasedOnObjectKeys([selector0, selector1], ['isComplete', 'task'], (completeTaskList) => {
-				console.log("got latest completeTaskList");
+				// equal SQL =>
+				// select * from isComplete LEFT JOIN taskList on isComplete.child_key == taskList.child_key
+				console.log("got latest completeTaskList", completeTaskList);
+				// you can do whatever you want here
+				// ex: filter, reduce, map
+
 				this.setState({ completeTaskList });
 			}, 0);
 		}
@@ -31,7 +38,13 @@ class HomePage extends Component {
 			let selector1 = (state) => state.task.isActive;
 			let selector2 = (state) => state.task.taskList;
 			this.unsub3 = rxQueryInnerJoin([selector0, selector1, selector2], ['isComplete', 'isActive', 'task'], (completeAndActiveTaskList) => {
-				console.log("got latest completeAndActiveTaskList");
+				// equal SQL =>
+				// select * from isComplete INNER JOIN isActive on isComplete.child_key == isActive.child_key
+				//                          INNER JOIN taskList on isActive.child_key == taskList.child_key
+				console.log("got latest completeAndActiveTaskList", completeAndActiveTaskList);
+				// you can do whatever you want here
+				// ex: filter, reduce, map
+
 				this.setState({ completeAndActiveTaskList });
 			}, 0);
 		}
@@ -39,12 +52,17 @@ class HomePage extends Component {
 			let selector0 = (state) => state.task.isComplete;
 			let selector1 = (state) => state.task.isActive;
 			this.unsub4 = rxQueryOuterJoin([selector0, selector1], ['isComplete', 'isActive'], (completeOrActive) => {
+				// equal SQL =>
+				// select * from isComplete OUTER JOIN isActive on isComplete.child_key == isActive.child_key
 				console.log("got latest completeOrActive", completeOrActive);
+				// you can do whatever you want here
+				// ex: filter, reduce, map
 				let isActiveOrComplete = {};
 				completeOrActive.forEach((each) => {
 					let { key, isComplete, isActive } = each;
 					isActiveOrComplete[key] = Object.assign({}, isComplete, isActive);
 				});
+
 				// set data into redux state, not local state
 				this.props.onMergeActiveCompleteSet(isActiveOrComplete);
 			}, 0);
@@ -53,7 +71,12 @@ class HomePage extends Component {
 			let selector0 = (state) => state.task.isActiveOrComplete;
 			let selector1 = (state) => state.task.taskList;
 			this.unsub5 = rxQueryInnerJoin([selector0, selector1], ['isActiveOrComplete', 'task'], (completeOrActiveTaskList) => {
+				// equal SQL =>
+				// select * from isActiveOrComplete INNER JOIN taskList on isActiveOrComplete.child_key == taskList.child_key
 				console.log("got latest completeOrActiveTaskList", completeOrActiveTaskList);
+				// you can do whatever you want here
+				// ex: filter, reduce, map
+
 				this.setState({ completeOrActiveTaskList });
 			}, 0);
 		}
@@ -76,13 +99,15 @@ class HomePage extends Component {
 		}
 
 		// subscribe a new live query
-		this.unsubscribeForFilter = rxQuerySimple([(state) => state.task.taskList], ['taskList'], (taskList) => {
-			console.log("got latest taskList");
+		this.unsubscribeForFilter = rxQuerySimple([(state) => state.task.taskList], ['taskList'], (val) => {
+			console.log("got latest val", val);
+			let { taskList } = val;
 			// you can do whatever you want here
 			// ex: filter, reduce, map
-			let filteredTaskList = taskList.taskList.filter((each) => {
+			let filteredTaskList = taskList.filter((each) => {
 				return each.content.indexOf(keyword) > -1;
 			});
+
 			this.setState({ filteredTaskList });
 		}, 0);
 		//}, 500);//debounceTime
@@ -121,15 +146,6 @@ class HomePage extends Component {
 						INACTIVE
 							</button>
 					Edit:<input type="text" value={task.content} onChange={(e) => this.props.onUpdateTask({ id: key, content: e.target.value })} />
-				</li >
-			);
-		});
-
-		let filteredTaskListOut = Object.keys(this.state.filteredTaskList || []).map((key) => {
-			let task = this.state.filteredTaskList[key];
-			return (
-				<li key={key}>
-					{task.content}
 				</li >
 			);
 		});
@@ -184,12 +200,20 @@ class HomePage extends Component {
 					<br />
 					<input type="text" onChange={this.handleFilteredKeyWordChange.bind(this)} />
 				</p>
+
 				<p className="App-intro">
 					All Filtered Task List
         </p>
-				<ul>{filteredTaskListOut}</ul>
-				<br />
-
+				<ul>
+					{(this.state.filteredTaskList || []).map((each, key) => {
+						let task = each;
+						return (
+							<li key={key}>
+								{task.content}
+							</li>
+						);
+					})}
+				</ul>
 			</div>
 		);
 	}
