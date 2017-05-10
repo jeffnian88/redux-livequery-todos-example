@@ -106,7 +106,7 @@ class HomePage extends Component {
 			let task = taskList[key];
 			return (
 				<li key={key}>
-					{task.content} (key:{key})
+					(key:{key}) {task.content}
 						<input type="text" value={task.content} onChange={(e) => this.props.onUpdateTask({ id: key, content: e.target.value })} />
 					- Created: {moment(task.created).format('H:mm:ss')}
 					<button type="button" onClick={() => this.props.onMarkCompleteTask(key)} disabled={key in isComplete}>
@@ -130,7 +130,7 @@ class HomePage extends Component {
 			let { isComplete, task, key } = each;
 			return (
 				<li key={key}>
-					{task.content} (key:{key}) -
+					(key:{key}) {task.content} - 
 					Complete Time: {moment(isComplete.completed).format('H:mm:ss')},
 					Spent Time: {moment.duration((isComplete.completed - task.created) / 1000, 'secands').humanize()}
 					<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)}>
@@ -145,7 +145,7 @@ class HomePage extends Component {
 			let { isComplete, isActive, task, key } = each;
 			return (
 				<li key={key}>
-					{task.content} (key:{key}) -
+					(key:{key}) {task.content} - 
 					Complete Time: {moment(isComplete.completed).format('H:mm:ss')},
 					Active Time: {moment(isActive.active).format('H:mm:ss')}
 					<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)}>
@@ -163,9 +163,9 @@ class HomePage extends Component {
 			let { isActiveOrComplete, task, key } = each;
 			return (
 				<li key={key}>
-					{task.content} (key:{key}) -
-					{isActiveOrComplete.completed ? `Complete Time: ${moment(isActiveOrComplete.completed).format('H:mm:ss')}, ` : ""}
-					{isActiveOrComplete.active ? `Active Time: ${moment(isActiveOrComplete.active).format('H:mm:ss')}` : ""}
+					(key:{key}) {task.content} - 
+					{isActiveOrComplete.completed ? ` Complete Time: ${moment(isActiveOrComplete.completed).format('H:mm:ss')},` : ""}
+					{isActiveOrComplete.active ? ` Active Time: ${moment(isActiveOrComplete.active).format('H:mm:ss')}` : ""}
 				</li >
 			);
 		});
@@ -175,7 +175,7 @@ class HomePage extends Component {
 			let task = this.state.filteredTaskList[key];
 			return (
 				<li key={key}>
-					{task.content} (key:{key})
+					{task.content}
 				</li >
 			);
 		});
