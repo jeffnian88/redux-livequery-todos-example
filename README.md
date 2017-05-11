@@ -1,8 +1,8 @@
-# react-livequery Example
+# redux-livequery TODOs Example
 
 * [Live Demo](https://twstorepos.firebaseapp.com)
 
-React example app that demonstrates using redux-livequery npm
+Redux-livequery example app that show how to use redux-livequery npm
 
 To run the app locally:
 
