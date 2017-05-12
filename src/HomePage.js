@@ -57,27 +57,40 @@ class HomePage extends Component {
 				console.log("got latest completeOrActive", completeOrActive);
 				// you can do whatever you want here
 				// ex: filter, reduce, map
-				let isActiveOrComplete = {};
+				let isCompleteOrActive = {};
 				completeOrActive.forEach((each) => {
 					let { key, isComplete, isActive } = each;
-					isActiveOrComplete[key] = Object.assign({}, isComplete, isActive);
+					isCompleteOrActive[key] = Object.assign({}, isComplete, isActive);
 				});
 
 				// set data into redux state, not local state
-				this.props.onMergeActiveCompleteSet(isActiveOrComplete);
+				this.props.onCompleteOrActiveSet(isCompleteOrActive);
 			}, 0);
 		}
 		if (!this.unsub5) {
-			let selector0 = (state) => state.task.isActiveOrComplete;
+			let selector0 = (state) => state.task.isCompleteOrActive;
 			let selector1 = (state) => state.task.taskList;
-			this.unsub5 = rxQueryInnerJoin([selector0, selector1], ['isActiveOrComplete', 'task'], (completeOrActiveTaskList) => {
+			this.unsub5 = rxQueryInnerJoin([selector0, selector1], ['isCompleteOrActive', 'task'], (completeOrActiveTaskList) => {
 				// equal SQL =>
-				// select * from isActiveOrComplete INNER JOIN taskList on isActiveOrComplete.child_key == taskList.child_key
+				// select * from isCompleteOrActive INNER JOIN taskList on isCompleteOrActive.child_key == taskList.child_key
 				console.log("got latest completeOrActiveTaskList", completeOrActiveTaskList);
 				// you can do whatever you want here
 				// ex: filter, reduce, map
 
 				this.setState({ completeOrActiveTaskList });
+			}, 0);
+		}
+		if (!this.unsub6) {
+			let selector0 = (state) => state.task.isCompleteNotActive;
+			let selector1 = (state) => state.task.taskList;
+			this.unsub6 = rxQueryInnerJoin([selector0, selector1], ['isCompleteNotActive', 'task'], (completeNotActiveTaskList) => {
+				// equal SQL =>
+				// select * from isCompleteOrActive INNER JOIN taskList on isCompleteOrActive.child_key == taskList.child_key
+				console.log("got latest completeNotActiveTaskList", completeNotActiveTaskList);
+				// you can do whatever you want here
+				// ex: filter, reduce, map
+
+				this.setState({ completeNotActiveTaskList });
 			}, 0);
 		}
 	}
@@ -194,6 +207,16 @@ class HomePage extends Component {
 					onUnMarkActiveTask={this.props.onUnMarkActiveTask} />
 				<hr />
 
+				<p className="App-intro">
+					Your Complete Not Active Task List
+				</p>
+				<TaskList taskList={this.state.completeNotActiveTaskList}
+					onUnMarkCompleteTask={this.props.onUnMarkCompleteTask}
+					onUnMarkActiveTask={this.props.onUnMarkActiveTask} />
+				<hr />
+
+
+
 
 				<p className="App-intro">
 					Please enter filter keyword
@@ -238,8 +261,8 @@ function mapDispatchToProps(dispatch, props) {
 		onUnMarkActiveTask: (id) => {
 			dispatch({ type: "UNMARK_ACTIVE_TASK", meta: { id } });
 		},
-		onMergeActiveCompleteSet: (isActiveOrComplete) => {
-			dispatch({ type: "MERGE_ACTIVE_COMPLETE_SET", payload: { isActiveOrComplete } });
+		onCompleteOrActiveSet: (isCompleteOrActive) => {
+			dispatch({ type: "SET_COMPLETE_OR_ACTIVE", payload: { isCompleteOrActive } });
 		},
 
 	};
@@ -250,9 +273,9 @@ export default connect(null, mapDispatchToProps)(HomePage);
 const TaskList = ({ taskList = [], onUnMarkCompleteTask, onUnMarkActiveTask }) => {
 	let taskListOut = taskList.map((each) => {
 		let { isComplete, isActive, task, key } = each;
-		let { isActiveOrComplete } = each;
-		let { completed } = isComplete || isActiveOrComplete || {};
-		let { active } = isActive || isActiveOrComplete || {};
+		let { isCompleteOrActive, isCompleteNotActive } = each;
+		let { completed } = isComplete || isCompleteOrActive || isCompleteNotActive || {};
+		let { active } = isActive || isCompleteOrActive || {};
 
 		let completedBtn = "", activeBtn = "";
 		if (completed) {

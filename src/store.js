@@ -5,8 +5,8 @@ import promiseMiddleware from 'redux-promise';
 
 import rootReducer from './reducers';
 
-import { livequeryEnhancer } from 'redux-livequery';
-//import { livequeryEnhancer } from '../../redux-livequery';
+//import { livequeryEnhancer } from 'redux-livequery';
+import { livequeryEnhancer, runLivequery } from 'redux-livequery';
 
 let appliedMiddleware;
 
@@ -24,11 +24,12 @@ if (isDEV) {
 } else {
   appliedMiddleware = applyMiddleware(promiseMiddleware, thunk);//applyMiddleware(thunk)(createStore);
 }
-
+import './livequery'
 const enhancer = compose(
-  appliedMiddleware,
   livequeryEnhancer(),
+  appliedMiddleware,
   window.devToolsExtension ? window.devToolsExtension() : f => f // add support for Redux dev tools,
 
 );
 export const store = createStore(rootReducer, { task: { taskList: [], isComplete: {}, isActive: {} } }, enhancer);
+runLivequery();
