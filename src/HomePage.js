@@ -3,8 +3,8 @@ import { connect } from 'react-redux';
 import logo from './logo.svg';
 import './App.css';
 import moment from 'moment';
-//import { rxQueryBasedOnObjectKeys, rxQueryInnerJoin, rxQueryOuterJoin, rxQuerySimple } from '../../redux-livequery';
-import { rxQueryBasedOnObjectKeys, rxQueryInnerJoin, rxQueryOuterJoin, rxQuerySimple } from 'redux-livequery';
+//import { rxQueryLeftJoin, rxQueryInnerJoin, rxQueryOuterJoin, rxQuerySimple } from '../../redux-livequery';
+import { rxQueryLeftJoin, rxQueryInnerJoin, rxQueryOuterJoin, rxQuerySimple } from 'redux-livequery';
 class HomePage extends Component {
 	constructor(props, context) {
 		super(props, context);
@@ -23,7 +23,7 @@ class HomePage extends Component {
 		if (!this.unsub2) {
 			let selector0 = (state) => state.task.isComplete;
 			let selector1 = (state) => state.task.taskList;
-			this.unsub2 = rxQueryBasedOnObjectKeys([selector0, selector1], ['isComplete', 'task'], (completeTaskList) => {
+			this.unsub2 = rxQueryLeftJoin([selector0, selector1], ['isComplete', 'task'], (completeTaskList) => {
 				// equal SQL =>
 				// select * from isComplete LEFT JOIN taskList on isComplete.child_key == taskList.child_key
 				console.log("got latest completeTaskList", completeTaskList);
