@@ -53,7 +53,7 @@ class HomePage extends Component {
 			let selector1 = (state) => state.task.isActive;
 			this.unsub4 = rxQueryFullOuterJoin([selector0, selector1], ['isComplete', 'isActive'], (completeOrActive) => {
 				// equal SQL =>
-				// select * from isComplete OUTER JOIN isActive on isComplete.child_key == isActive.child_key
+				// select * from isComplete FULL OUTER JOIN isActive on isComplete.child_key == isActive.child_key
 				console.log("got latest completeOrActive", completeOrActive);
 				// you can do whatever you want here
 				// ex: filter, reduce, map
