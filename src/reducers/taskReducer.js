@@ -1,38 +1,71 @@
-import update from 'immutability-helper';
-
 export default function taskReducer(state = { taskList: [], isComplete: {}, isActive: {} }, action = {}) {
 	switch (action.type) {
 		case "ADD_NEW_TASK": {
 			let { content } = action.payload;
-			return update(state, { taskList: { $push: [{ content, created: Date.now() }] } });
+			return {
+				...state,
+				taskList: [...state.taskList, { content, created: Date.now() }]
+			};
 		}
 		case "UPDATE_TASK": {
 			let { id, content } = action.payload;
-			return update(state, { taskList: { [id]: { $merge: { content, updated: Date.now() } } } });
+			let numId = parseInt(id, 10);
+			return {
+				...state,
+				taskList: state.taskList.map((each, index) => index === numId ? { content, updated: Date.now() } : each)
+			};
 		}
 		case "MARK_COMPLETE_TASK": {
 			let { id } = action.meta;
-			return update(state, { isComplete: { [id]: { $set: { completed: Date.now() } } } });
+			return {
+				...state,
+				isComplete: { ...state.isComplete, [id]: { completed: Date.now() } }
+			};
 		}
 		case "UNMARK_COMPLETE_TASK": {
 			let { id } = action.meta;
-			return update(state, { isComplete: { $apply: function (x) { let y = Object.assign({}, x); delete y[id]; return y; } } });
+			return {
+				...state,
+				isComplete: Object.keys(state.isComplete).reduce((result, key) => {
+					if (key !== id) {
+						result[key] = state.isComplete[key];
+					}
+					return result;
+				}, {})
+			};
 		}
 		case "MARK_ACTIVE_TASK": {
 			let { id } = action.meta;
-			return update(state, { isActive: { [id]: { $set: { active: Date.now() } } } });
+			return {
+				...state,
+				isActive: { ...state.isActive, [id]: { active: Date.now() } }
+			};
 		}
 		case "UNMARK_ACTIVE_TASK": {
 			let { id } = action.meta;
-			return update(state, { isActive: { $apply: function (x) { let y = Object.assign({}, x); delete y[id]; return y; } } });
+			return {
+				...state,
+				isActive: Object.keys(state.isActive).reduce((result, key) => {
+					if (key !== id) {
+						result[key] = state.isActive[key];
+					}
+					return result;
+				}, {})
+			};
 		}
 		case "SET_COMPLETE_OR_ACTIVE": {
 			let { isCompleteOrActive } = action.payload;
-			return update(state, { isCompleteOrActive: { $set: isCompleteOrActive } });
+			return {
+				...state,
+				isCompleteOrActive: isCompleteOrActive
+			};
 		}
 		case "SET_COMPLETE_NOT_ACTIVE": {
 			let { isCompleteNotActive } = action.payload;
-			return update(state, { isCompleteNotActive: { $set: isCompleteNotActive } });
+			return {
+				...state,
+				isCompleteNotActive: isCompleteNotActive
+			};
 		}
 		default:
 			return state;
