@@ -3,96 +3,54 @@ import { connect } from 'react-redux';
 import logo from './logo.svg';
 import './App.css';
 import moment from 'moment';
-//import { rxQueryLeftJoin, rxQueryInnerJoin, rxQueryFullOuterJoin, rxQuerySimple } from '../../redux-livequery';
-import { rxQueryLeftJoin, rxQueryInnerJoin, rxQueryFullOuterJoin, rxQuerySimple } from 'redux-livequery';
+//import { rxQueryLeftJoin, rxQueryInnerJoin, rxQuerySimple } from '../../redux-livequery';
+import { rxQueryLeftJoin, rxQueryInnerJoin, rxQuerySimple } from 'redux-livequery';
 class HomePage extends Component {
 	constructor(props, context) {
 		super(props, context);
 		this.state = {};
-		if (!this.unsub1) {
-			let selector = (state) => state.task;
-			this.unsub1 = rxQuerySimple([selector], ['task'], (composedState) => {
-				// equal SQL => select * from task
-				console.log("got latest composedState", composedState);
-				// you can do whatever you want here
-				// ex: filter, reduce, map
+		this.unsub = [];
+	}
+	componentDidMount() {
+		const completeSelector = (state) => state.task.completeSet;
+		const activeSelector = (state) => state.task.activeSet;
+		const completeOrActiveSetSelector = (state) => state.task.completeOrActiveSet;
+		const taskListSelector = (state) => state.task.taskList;
 
-				this.setState({ composedState });
-			}, 0);
-		}
-		if (!this.unsub2) {
-			let selector0 = (state) => state.task.isComplete;
-			let selector1 = (state) => state.task.taskList;
-			this.unsub2 = rxQueryLeftJoin([selector0, selector1], ['isComplete', 'task'], (completeTaskList) => {
-				// equal SQL =>
-				// select * from isComplete LEFT JOIN taskList on isComplete.child_key == taskList.child_key
-				console.log("got latest completeTaskList", completeTaskList);
-				// you can do whatever you want here
-				// ex: filter, reduce, map
+		const unsub1 = rxQueryLeftJoin([completeSelector, taskListSelector], ['completeSet', 'task'], (completeTaskList) => {
+			// equal SQL =>
+			// select * from completeSet LEFT JOIN taskList on completeSet.child_key == taskList.child_key
+			console.log("got latest completeTaskList", completeTaskList);
+			// you can do whatever you want here
+			// ex: filter, reduce, map
 
-				this.setState({ completeTaskList });
-			}, 0);
-		}
-		if (!this.unsub3) {
-			let selector0 = (state) => state.task.isComplete;
-			let selector1 = (state) => state.task.isActive;
-			let selector2 = (state) => state.task.taskList;
-			this.unsub3 = rxQueryInnerJoin([selector0, selector1, selector2], ['isComplete', 'isActive', 'task'], (completeAndActiveTaskList) => {
-				// equal SQL =>
-				// select * from isComplete INNER JOIN isActive on isComplete.child_key == isActive.child_key
-				//                          INNER JOIN taskList on isActive.child_key == taskList.child_key
-				console.log("got latest completeAndActiveTaskList", completeAndActiveTaskList);
-				// you can do whatever you want here
-				// ex: filter, reduce, map
+			this.setState({ completeTaskList });
+		}, 0);
+		this.unsub.push(unsub1);
 
-				this.setState({ completeAndActiveTaskList });
-			}, 0);
-		}
-		if (!this.unsub4) {
-			let selector0 = (state) => state.task.isComplete;
-			let selector1 = (state) => state.task.isActive;
-			this.unsub4 = rxQueryFullOuterJoin([selector0, selector1], ['isComplete', 'isActive'], (completeOrActive) => {
-				// equal SQL =>
-				// select * from isComplete FULL OUTER JOIN isActive on isComplete.child_key == isActive.child_key
-				console.log("got latest completeOrActive", completeOrActive);
-				// you can do whatever you want here
-				// ex: filter, reduce, map
-				let isCompleteOrActive = {};
-				completeOrActive.forEach((each) => {
-					let { key, isComplete, isActive } = each;
-					isCompleteOrActive[key] = Object.assign({}, isComplete, isActive);
-				});
+		const unsub2 = rxQueryInnerJoin([completeSelector, activeSelector, taskListSelector], ['completeSet', 'activeSet', 'task'], (completeAndActiveTaskList) => {
+			// equal SQL =>
+			// select * from completeSet INNER JOIN activeSet on completeSet.child_key == activeSet.child_key
+			//                          INNER JOIN taskList on activeSet.child_key == taskList.child_key
+			console.log("got latest completeAndActiveTaskList", completeAndActiveTaskList);
+			// you can do whatever you want here
+			// ex: filter, reduce, map
 
-				// set data into redux state, not local state
-				this.props.onCompleteOrActiveSet(isCompleteOrActive);
-			}, 0);
-		}
-		if (!this.unsub5) {
-			let selector0 = (state) => state.task.isCompleteOrActive;
-			let selector1 = (state) => state.task.taskList;
-			this.unsub5 = rxQueryInnerJoin([selector0, selector1], ['isCompleteOrActive', 'task'], (completeOrActiveTaskList) => {
-				// equal SQL =>
-				// select * from isCompleteOrActive INNER JOIN taskList on isCompleteOrActive.child_key == taskList.child_key
-				console.log("got latest completeOrActiveTaskList", completeOrActiveTaskList);
-				// you can do whatever you want here
-				// ex: filter, reduce, map
+			this.setState({ completeAndActiveTaskList });
+		}, 0);
+		this.unsub.push(unsub2);
 
-				this.setState({ completeOrActiveTaskList });
-			}, 0);
-		}
-		if (!this.unsub6) {
-			let selector0 = (state) => state.task.isCompleteNotActive;
-			let selector1 = (state) => state.task.taskList;
-			this.unsub6 = rxQueryInnerJoin([selector0, selector1], ['isCompleteNotActive', 'task'], (completeNotActiveTaskList) => {
-				// equal SQL =>
-				// select * from isCompleteOrActive INNER JOIN taskList on isCompleteOrActive.child_key == taskList.child_key
-				console.log("got latest completeNotActiveTaskList", completeNotActiveTaskList);
-				// you can do whatever you want here
-				// ex: filter, reduce, map
+		const unsub3 = rxQueryInnerJoin([completeOrActiveSetSelector, taskListSelector], ['completeOrActiveSet', 'task'], (completeOrActiveTaskList) => {
+			// equal SQL =>
+			// select * from completeOrActiveSet INNER JOIN taskList on completeOrActiveSet.child_key == taskList.child_key
+			console.log("got latest completeOrActiveTaskList", completeOrActiveTaskList);
+			// you can do whatever you want here
+			// ex: filter, reduce, map
 
-				this.setState({ completeNotActiveTaskList });
-			}, 0);
-		}
+			this.setState({ completeOrActiveTaskList });
+		}, 0);
+		this.unsub.push(unsub3);
+
 	}
 	handleFilteredKeyWordChange(e) {
 		let keyword = e.target.value;
@@ -123,7 +81,6 @@ class HomePage extends Component {
 
 			this.setState({ filteredTaskList });
 		}, 0);
-		//}, 500);//debounceTime
 	}
 
 	handleTaskTitleChange(e) {
@@ -137,25 +94,23 @@ class HomePage extends Component {
 	}
 	render() {
 		//console.log("[HomePage] render():", this);
-
-		let { task } = this.state.composedState || {};
-		let { taskList, isComplete, isActive } = task || {};
-		let taskListOut = Object.keys(taskList || []).map((key) => {
-			let task = taskList[key];
+		const { taskList, completeSet = {}, activeSet = {} } = this.props.taskRoot || {};
+		const allTaskListOut = Object.keys(taskList || []).map((key) => {
+			const task = taskList[key];
 			return (
 				<li key={key}>
 					(key:{key}) {task.content} -
 					Created: {moment(task.created).format('H:mm:ss')}
-					<button type="button" onClick={() => this.props.onMarkCompleteTask(key)} disabled={key in isComplete}>
+					<button type="button" onClick={() => this.props.onMarkCompleteTask(key)} disabled={key in completeSet}>
 						COMPLETE
 							</button>
-					<button type="button" onClick={() => this.props.onMarkActiveTask(key)} disabled={key in isActive}>
+					<button type="button" onClick={() => this.props.onMarkActiveTask(key)} disabled={key in activeSet}>
 						ACTIVE
 							</button>
-					<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)} disabled={!(key in isComplete)}>
+					<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)} disabled={!(key in completeSet)}>
 						UNCOMPLETE
 							</button>
-					<button type="button" onClick={() => this.props.onUnMarkActiveTask(key)} disabled={!(key in isActive)}>
+					<button type="button" onClick={() => this.props.onUnMarkActiveTask(key)} disabled={!(key in activeSet)}>
 						INACTIVE
 							</button>
 					Edit:<input type="text" value={task.content} onChange={(e) => this.props.onUpdateTask({ id: key, content: e.target.value })} />
@@ -180,43 +135,35 @@ class HomePage extends Component {
 				<p className="App-intro">
 					All Task List
         </p>
-				<ul>{taskListOut}</ul>
+				<ul>{allTaskListOut}</ul>
 				<hr />
 
 				<p className="App-intro">
-					Your Complete Task List
+					Complete Task List
 				</p>
-				<TaskList taskList={this.state.completeTaskList}
+				<TaskList
+					taskList={this.state.completeTaskList}
 					onUnMarkCompleteTask={this.props.onUnMarkCompleteTask}
 					onUnMarkActiveTask={this.props.onUnMarkActiveTask} />
 				<hr />
 
 				<p className="App-intro">
-					Your Complete and Active Task List
+					Complete and Active Task List
 				</p>
-				<TaskList taskList={this.state.completeAndActiveTaskList}
+				<TaskList
+					taskList={this.state.completeAndActiveTaskList}
 					onUnMarkCompleteTask={this.props.onUnMarkCompleteTask}
 					onUnMarkActiveTask={this.props.onUnMarkActiveTask} />
 				<hr />
 
 				<p className="App-intro">
-					Your Complete or Active Task List
+					Complete or Active Task List
 				</p>
-				<TaskList taskList={this.state.completeOrActiveTaskList}
+				<TaskList
+					taskList={this.state.completeOrActiveTaskList}
 					onUnMarkCompleteTask={this.props.onUnMarkCompleteTask}
 					onUnMarkActiveTask={this.props.onUnMarkActiveTask} />
 				<hr />
-
-				<p className="App-intro">
-					Your Complete Not Active Task List
-				</p>
-				<TaskList taskList={this.state.completeNotActiveTaskList}
-					onUnMarkCompleteTask={this.props.onUnMarkCompleteTask}
-					onUnMarkActiveTask={this.props.onUnMarkActiveTask} />
-				<hr />
-
-
-
 
 				<p className="App-intro">
 					Please enter filter keyword
@@ -241,6 +188,13 @@ class HomePage extends Component {
 		);
 	}
 }
+
+function mapStateToProps(state, ownProps) {
+	return {
+		taskRoot: state.task
+	}
+}
+
 function mapDispatchToProps(dispatch, props) {
 	return {
 		onAddNewTask: (content) => {
@@ -250,32 +204,27 @@ function mapDispatchToProps(dispatch, props) {
 			dispatch({ type: "UPDATE_TASK", payload: { id, content } });
 		},
 		onMarkCompleteTask: (id) => {
-			dispatch({ type: "MARK_COMPLETE_TASK", meta: { id } });
+			dispatch({ type: "MARK_TASK_COMPLETE", meta: { id } });
 		},
 		onUnMarkCompleteTask: (id) => {
-			dispatch({ type: "UNMARK_COMPLETE_TASK", meta: { id } });
+			dispatch({ type: "UNMARK_TASK_COMPLETE", meta: { id } });
 		},
 		onMarkActiveTask: (id) => {
-			dispatch({ type: "MARK_ACTIVE_TASK", meta: { id } });
+			dispatch({ type: "MARK_TASK_ACTIVE", meta: { id } });
 		},
 		onUnMarkActiveTask: (id) => {
-			dispatch({ type: "UNMARK_ACTIVE_TASK", meta: { id } });
+			dispatch({ type: "UNMARK_TASK_ACTIVE", meta: { id } });
 		},
-		onCompleteOrActiveSet: (isCompleteOrActive) => {
-			dispatch({ type: "SET_COMPLETE_OR_ACTIVE", payload: { isCompleteOrActive } });
-		},
-
 	};
 }
 // Only bind action to react component
-export default connect(null, mapDispatchToProps)(HomePage);
+export default connect(mapStateToProps, mapDispatchToProps)(HomePage);
 
 const TaskList = ({ taskList = [], onUnMarkCompleteTask, onUnMarkActiveTask }) => {
-	let taskListOut = taskList.map((each) => {
-		let { isComplete, isActive, task, key } = each;
-		let { isCompleteOrActive, isCompleteNotActive } = each;
-		let { completed } = isComplete || isCompleteOrActive || isCompleteNotActive || {};
-		let { active } = isActive || isCompleteOrActive || {};
+	const taskListOut = taskList.map((each) => {
+		const { completeSet, activeSet, completeOrActiveSet, task, key } = each;
+		const { completed } = completeSet || completeOrActiveSet || {};
+		const { active } = activeSet || completeOrActiveSet || {};
 
 		let completedBtn = "", activeBtn = "";
 		if (completed) {
@@ -291,7 +240,6 @@ const TaskList = ({ taskList = [], onUnMarkCompleteTask, onUnMarkActiveTask }) =
 				{active ? ` Active Time: ${moment(active).format('H:mm:ss')}` : ""}
 				{completedBtn}{activeBtn}
 			</li >
-
 		);
 	});
 
