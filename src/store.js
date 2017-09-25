@@ -22,7 +22,7 @@ if (isDEV) {
 } else {
   appliedMiddleware = applyMiddleware(promiseMiddleware, thunk);//applyMiddleware(thunk)(createStore);
 }
-import { livequeryEnhancer, runLivequery } from 'redux-livequery';
+import { livequeryEnhancer } from 'redux-livequery';
 //import { livequeryEnhancer } from '../../redux-livequery';
 
 const enhancer = compose(
