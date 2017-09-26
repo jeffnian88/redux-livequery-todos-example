@@ -1,3 +1,4 @@
+import { omit } from 'lodash';
 export default function taskReducer(state = { taskList: [], completeSet: {}, activeSet: {} }, action = {}) {
 	switch (action.type) {
 		case "ADD_NEW_TASK": {
@@ -17,45 +18,39 @@ export default function taskReducer(state = { taskList: [], completeSet: {}, act
 		}
 		case "MARK_TASK_COMPLETE": {
 			const { id } = action.meta;
-			state = {
+			const completeSet = { ...state.completeSet, [id]: { completed: Date.now() } };
+			return {
 				...state,
-				completeSet: { ...state.completeSet, [id]: { completed: Date.now() } }
+				completeSet,
+				completeOrActiveSet: { ...completeSet, ...state.activeSet }
 			};
-			return { ...state, completeOrActiveSet: { ...state.completeSet, ...state.activeSet } };
-		}
-		case "UNMARK_TASK_COMPLETE": {
-			const { id } = action.meta;
-			state = {
-				...state,
-				completeSet: Object.keys(state.completeSet).reduce((nextSet, key) => {
-					if (key !== id) {
-						nextSet[key] = state.completeSet[key];
-					}
-					return nextSet;
-				}, {})
-			};
-			return { ...state, completeOrActiveSet: { ...state.completeSet, ...state.activeSet } };
 		}
 		case "MARK_TASK_ACTIVE": {
 			const { id } = action.meta;
-			state = {
+			const activeSet = { ...state.activeSet, [id]: { active: Date.now() } };
+			return {
 				...state,
-				activeSet: { ...state.activeSet, [id]: { active: Date.now() } }
+				activeSet,
+				completeOrActiveSet: { ...state.completeSet, ...activeSet }
 			};
-			return { ...state, completeOrActiveSet: { ...state.completeSet, ...state.activeSet } };
+		}
+		case "UNMARK_TASK_COMPLETE": {
+			const { id } = action.meta;
+			const completeSet = omit(state.completeSet, id);
+			return {
+				...state,
+				completeSet,
+				completeOrActiveSet: { ...completeSet, ...state.activeSet }
+			};
 		}
 		case "UNMARK_TASK_ACTIVE": {
 			const { id } = action.meta;
-			state = {
+			const activeSet = omit(state.activeSet, id);
+			return {
 				...state,
-				activeSet: Object.keys(state.activeSet).reduce((result, key) => {
-					if (key !== id) {
-						result[key] = state.activeSet[key];
-					}
-					return result;
-				}, {})
+				activeSet,
+				completeOrActiveSet: { ...activeSet, ...state.completeSet }
 			};
-			return { ...state, completeOrActiveSet: { ...state.completeSet, ...state.activeSet } };
 		}
 		default:
 			return state;
