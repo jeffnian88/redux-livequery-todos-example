@@ -10,7 +10,7 @@
     "react-dom": "^15.5.4",
     "react-redux": "^5.0.4",
     "redux": "^3.7.2",
-    "redux-livequery": "^0.3.4-rc10",
+    "redux-livequery": "^0.3.4-rc11",
     "redux-logger": "^3.0.1",
     "redux-promise": "^0.5.3",
     "redux-thunk": "^2.2.0",

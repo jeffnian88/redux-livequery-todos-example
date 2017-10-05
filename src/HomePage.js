@@ -99,20 +99,27 @@ class HomePage extends Component {
 			const task = taskList[key];
 			return (
 				<li key={key}>
-					(key:{key}) {task.content} -
-					Created: {moment(task.created).format('H:mm:ss')}
-					<button type="button" onClick={() => this.props.onMarkCompleteTask(key)} disabled={key in completeSet}>
-						COMPLETE
+					<big>{task.content}</big> - Created: {moment(task.created).format('H:mm:ss')}
+					{
+						(key in completeSet) ?
+							<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)}>
+								UNCOMPLETE
 							</button>
-					<button type="button" onClick={() => this.props.onMarkActiveTask(key)} disabled={key in activeSet}>
-						ACTIVE
+							:
+							<button type="button" onClick={() => this.props.onMarkCompleteTask(key)} >
+								COMPLETE
 							</button>
-					<button type="button" onClick={() => this.props.onUnMarkCompleteTask(key)} disabled={!(key in completeSet)}>
-						UNCOMPLETE
+					}
+					{
+						(key in activeSet) ?
+							<button type="button" onClick={() => this.props.onUnMarkActiveTask(key)}>
+								UNACTIVE
 							</button>
-					<button type="button" onClick={() => this.props.onUnMarkActiveTask(key)} disabled={!(key in activeSet)}>
-						INACTIVE
+							:
+							<button type="button" onClick={() => this.props.onMarkActiveTask(key)}>
+								ACTIVE
 							</button>
+					}
 					Edit:<input type="text" value={task.content} onChange={(e) => this.props.onUpdateTask({ id: key, content: e.target.value })} />
 				</li >
 			);
@@ -139,19 +146,19 @@ class HomePage extends Component {
 				<hr />
 
 				<p className="App-intro">
-					Complete Task List
+					Complete and Active Task List
 				</p>
 				<TaskList
-					taskList={this.state.completeTaskList}
+					taskList={this.state.completeAndActiveTaskList}
 					onUnMarkCompleteTask={this.props.onUnMarkCompleteTask}
 					onUnMarkActiveTask={this.props.onUnMarkActiveTask} />
 				<hr />
 
 				<p className="App-intro">
-					Complete and Active Task List
+					Complete Task List
 				</p>
 				<TaskList
-					taskList={this.state.completeAndActiveTaskList}
+					taskList={this.state.completeTaskList}
 					onUnMarkCompleteTask={this.props.onUnMarkCompleteTask}
 					onUnMarkActiveTask={this.props.onUnMarkActiveTask} />
 				<hr />
@@ -164,6 +171,7 @@ class HomePage extends Component {
 					onUnMarkCompleteTask={this.props.onUnMarkCompleteTask}
 					onUnMarkActiveTask={this.props.onUnMarkActiveTask} />
 				<hr />
+
 
 				<p className="App-intro">
 					Please enter filter keyword
@@ -223,22 +231,23 @@ export default connect(mapStateToProps, mapDispatchToProps)(HomePage);
 const TaskList = ({ taskList = [], onUnMarkCompleteTask, onUnMarkActiveTask }) => {
 	const taskListOut = taskList.map((each) => {
 		const { completeSet, activeSet, completeOrActiveSet, task, key } = each;
-		const { completed } = completeSet || completeOrActiveSet || {};
-		const { active } = activeSet || completeOrActiveSet || {};
+		const { completeTimestamp } = completeSet || completeOrActiveSet || {};
+		const { activeTimestamp } = activeSet || completeOrActiveSet || {};
 
 		let completedBtn = "", activeBtn = "";
-		if (completed) {
+		if (completeTimestamp) {
 			completedBtn = <button type="button" onClick={() => onUnMarkCompleteTask(key)}>UNCOMPLETE</button>;
 		}
-		if (active) {
+		if (activeTimestamp) {
 			activeBtn = <button type="button" onClick={() => onUnMarkActiveTask(key)}>INACTIVE</button>;
 		}
 		return (
 			<li key={key}>
-				(key:{key}) {task.content} -
-				{completed ? ` Complete Time: ${moment(completed).format('H:mm:ss')}` : ""}
-				{active ? ` Active Time: ${moment(active).format('H:mm:ss')}` : ""}
-				{completedBtn}{activeBtn}
+				<big>{task.content}</big> -
+				{completeTimestamp ? ` Complete Time: ${moment(completeTimestamp).format('H:mm:ss')}` : ""}
+				{completedBtn}
+				{activeTimestamp ? ` Active Time: ${moment(activeTimestamp).format('H:mm:ss')}` : ""}
+				{activeBtn}
 			</li >
 		);
 	});
